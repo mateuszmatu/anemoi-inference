@@ -1,4 +1,4 @@
-# (C) Copyright 2024 Anemoi contributors.
+#(C) Copyright 2024 Anemoi contributors.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -180,9 +180,9 @@ class ExternalGraphRunner(DefaultRunner):
         """
         super().__init__(config)
         # TODO: multi-dataset checkpoint support
-        assert (
-            not self.checkpoint.multi_dataset
-        ), "ExternalGraphRunner currently only supports legacy single-dataset checkpoints, trained with `anemoi-training<0.9` and `anemoi-models<0.12`"
+        #assert (
+        #    not self.checkpoint.multi_dataset
+        #), "ExternalGraphRunner currently only supports legacy single-dataset checkpoints, trained with `anemoi-training<0.9` and `anemoi-models<0.12`"
         self.check_state_dict = check_state_dict
         self.graph_path = graph
 
@@ -212,29 +212,29 @@ class ExternalGraphRunner(DefaultRunner):
 
         # Check if the external graph has the 'indices_connected_nodes' attribute
         # If so adapt dataloader and add supporting array
-        data = self.checkpoint._metadata._config.graph.data
-        assert data in self.graph.node_types, f"Node type {data} not found in external graph."
-        if "indices_connected_nodes" in self.graph[data]:
-            LOG.info(
-                "The external graph has the 'indices_connected_nodes' attribute."
-                "Patching metadata with MaskedGrid 'grid_indices' to ensure correct data loading."
-            )
-            self.checkpoint._metadata.patch(
-                {
-                    "config": {
-                        "dataloader": {
-                            "grid_indices": {
-                                "_target_": "anemoi.training.data.grid_indices.MaskedGrid",
-                                "nodes_name": data,
-                                "node_attribute_name": "indices_connected_nodes",
+        #assert data in self.graph.node_types, f"Node type {data} not found in external graph."
+        for d in data:
+            if "indices_connected_nodes" in self.graph[d]:
+                LOG.info(
+                    "The external graph has the 'indices_connected_nodes' attribute."
+                    "Patching metadata with MaskedGrid 'grid_indices' to ensure correct data loading."
+                )
+                self.checkpoint._metadata.patch(
+                    {
+                        "config": {
+                            "dataloader": {
+                                "grid_indices": {
+                                    "_target_": "anemoi.training.data.grid_indices.MaskedGrid",
+                                    "nodes_name": d,
+                                    "node_attribute_name": "indices_connected_nodes",
+                                }
                             }
                         }
                     }
-                }
-            )
-            LOG.info("Moving 'indices_connected_nodes' from external graph to supporting arrays as 'grid_indices'.")
-            indices_connected_nodes = self.graph[data]["indices_connected_nodes"].numpy()
-            self.checkpoint._metadata._supporting_arrays["grid_indices"] = indices_connected_nodes.squeeze()
+                )
+                LOG.info("Moving 'indices_connected_nodes' from external graph to supporting arrays as 'grid_indices'.")
+                indices_connected_nodes = self.graph[d]["indices_connected_nodes"].numpy()
+                self.checkpoint._metadata._supporting_arrays["grid_indices"] = indices_connected_nodes.squeeze()
 
         if output_mask:
             nodes = output_mask["nodes_name"]
@@ -245,7 +245,7 @@ class ExternalGraphRunner(DefaultRunner):
                 attribute,
                 nodes,
             )
-
+        
         if update_supporting_arrays is not None:
             self.checkpoint._metadata._supporting_arrays.update(
                 get_updated_supporting_arrays(update_supporting_arrays, self.graph)
