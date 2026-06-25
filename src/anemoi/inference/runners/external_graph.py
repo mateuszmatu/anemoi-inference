@@ -213,6 +213,7 @@ class ExternalGraphRunner(DefaultRunner):
         # Check if the external graph has the 'indices_connected_nodes' attribute
         # If so adapt dataloader and add supporting array
         #assert data in self.graph.node_types, f"Node type {data} not found in external graph."
+        data = list(self.checkpoint._metadata._config.graph.nodes.keys())
         for d in data:
             if "indices_connected_nodes" in self.graph[d]:
                 LOG.info(
